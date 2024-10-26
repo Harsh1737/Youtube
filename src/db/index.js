@@ -10,11 +10,45 @@ const connectDB = async() => {
     }catch(error){
         console.log("Error in connection  : ", error);
         throw error;
-        process.exit(1);
     }
 }
 
 export default connectDB;
+
+
+
+
+
+
+
+
+
+
+// in main index.js file
+/*
+import express from "express";
+const app = express();
+// needed to import this to attact listener to database connection
+// Connect to MongoDB = iffy
+// ; for safety, cleaning up any previous code
+(async () => {
+    try {
+    await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`);
+    app.on("error", (error) => {
+        console.log("Error : ", error);
+        throw error;
+    });
+    app.listen(process.env.PORT, () => {
+        console.log("Server is running on port : ", process.env.PORT);
+    });
+    } catch (error) {
+    console.log("Error : ", error);
+    throw error;
+    }
+})();
+*/
+
+
 
 // Process.exit(1) will exit the process with a failure code.
 // Process is process object that is a global that provides information about, and control over, the current Node.js process.
