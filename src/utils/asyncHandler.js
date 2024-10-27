@@ -25,5 +25,6 @@ const asyncHandler = (fn) => (req,res,next) => {
     }
     )(req,res,next)
 }
+// asyncHandler is a middleware function that takes a function as an argument and returns a function. The returned function is an async function that takes three arguments: req, res, and next.
 
 export {asyncHandler}

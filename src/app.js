@@ -16,6 +16,11 @@ app.use(express.static("public"));  // public folder ( on our server) is accessi
 app.use(cookieParser());
 
 
+// routes import
+import userRouter from "./routes/user.routes.js";
+
+// routes declaration
+app.use("/api/v1/users", userRouter);
 
 export default app;
 
