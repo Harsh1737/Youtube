@@ -1,5 +1,5 @@
 // const asyncHandler = () => {}
-// Paassing a function down the road  ==> const asyncHandler = (fn) => {}
+// const asyncHandler = (fn) => {}
 // const asyncHandler = () => { return () => {} }
 // const asyncHandler = () => { return (req, res, next) => {} }
 // const asyncHandler = (fn) => { async () => {} }

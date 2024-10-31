@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+
 const registerUser = asyncHandler(async (req, res) => {
     // get the user data from the request body (frontend)
     // validate the user data
@@ -13,34 +14,39 @@ const registerUser = asyncHandler(async (req, res) => {
     // send the response back to the frontend after removing the sensitive data ( password, refresh token)
     // check for the errors
     // send the response back to the frontend
-    const {fullName, email, username, password} = req.body;
-    // console.log(fullName, email, username, password);
+    const {fullname, email, username, password} = req.body;
+    // console.log(fullname, email, username, password);
 
-    if ( [fullName, email, username, password].some((field) => field === undefined || field.trim() === "") ) {
+    if ( [fullname, email, username, password].some((field) => field === undefined || field.trim() === "") ) {
         throw new ApiError(400, "All fields are required");
     }
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{email}, {username}]
     })
+    
     if (existedUser) {
         throw new ApiError(409, "User already exists");
     }
-
-    const avatarLocalPath = req.files?.avatar[0].path;
-    const  coverImageLocalPath = req.files?.coverImage[0].path;
+    // console.log(req.files);
+    
+    const avatarLocalPath = req.files?.avatar[0]?.path; 
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
     if ( !avatarLocalPath ) {
         throw new ApiError(400, "Please provide avatar image");
-    }
-    
+    }   
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
+    console.table([avatar]);
     if (!avatar) {
         throw new ApiError(500, "Failed to upload images");
     }
 
     const user = await User.create({
-        fullName,
+        fullname,
         email,
         username : username.toLowerCase(),
         password,
