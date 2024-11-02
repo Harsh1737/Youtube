@@ -177,7 +177,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
-const ChangePassword = asyncHandler( async( req,res ) =>{
+const changePassword = asyncHandler( async( req,res ) =>{
 
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword) throw new ApiError(400, "Please provide old password and new password");
@@ -231,6 +231,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     // ( !avatar.url)
     if (!avatar) throw new ApiError(500, "Failed to upload images");
 
+    // TODO: delete the old avatar from cloudinary
+
     const user = await User.findByIdAndUpdate(req.user?._id, {
         $set: {avatar: avatar.url}
     }, {new: true, runValidators: true}).select("-password -refreshToken");
@@ -261,13 +263,127 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "User cover image updated successfully", user));
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const {username} = req.params
+
+    if (!username?.trim()) throw new ApiError(400, "Please provide username");
+
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase()
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup:{
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscredTo"
+            }
+        },
+        {
+            $addFields: {
+                subscriberCount: {$size: "$subscribers"},
+                subscribedToCount: {$size: "$subscredTo"},
+                isSubscribed:{
+                    $cond: {if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullname: 1,
+                username: 1,
+                subscriberCount: 1,
+                subscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+                password: 0,
+                refreshToken: 0,
+            }
+        }
+    ])
+    // console.log(channel);
+    if (!channel?.length) throw new ApiError(404, "Channel not found");
+
+    return res
+    .status(200)
+    .json( new ApiResponse(200, "Channel profile", channel[0]));
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    // const user = req.user._id;
+    // In this case mongoose will automatically convert the string to ObjectId and then compare
+    // But in case of aggregate we have to convert the string to ObjectId
+
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user?._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory.video",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline:[
+                                {
+                                    $project: {
+                                        fullname: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        },
+                    },
+                    {
+                        $addFields: {
+                            owner: { $first: "$owner" }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, "Watch history", user[0].watchHistory));
+});
+
 export { 
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
-    ChangePassword,
+    changePassword,
     getUserProfile,
     updateUserAvatar,
     updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory,
 };
