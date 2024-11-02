@@ -1,5 +1,15 @@
 import { Router } from 'express';
-import { registerUser,loginUser,logoutUser } from '../controllers/user.controller.js';
+import { registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changePassword,
+    getUserProfile,
+    updateUserProfile,
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory, } from "../controllers/user.controller.js";
 import { upload } from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -23,4 +33,13 @@ router.route("/login").post(loginUser);
 //secure routes
 router.route("/logout").post(verifyJWT,logoutUser);
 router.route("/refresh-token").post(refreshAccessToken); // verifyJWT is not required here
+router.route("/change-password").post(verifyJWT,changePassword);
+router.route("/profile").get(verifyJWT,getUserProfile);
+router.route("/udpate-profile").patch(verifyJWT,updateUserProfile);
+router.route("/update-avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar);
+router.route("/update-cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage);
+router.route("/channel/:username").get(getUserChannelProfile);  // username should be same bcs, we are using it in the controller
+router.route("/watch-history").get(verifyJWT,getWatchHistory);
+
+
 export default router;
