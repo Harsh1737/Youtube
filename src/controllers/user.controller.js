@@ -4,6 +4,7 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model.js';
+import mongoose from 'mongoose';
 
 const generateAccessAndRefreshTokens = async(userId) =>{
     try {
@@ -126,7 +127,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const user = await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {refreshToken: undefined}
+            $unset: {refreshToken: 1} // this will remove the refreshToken from the database
         },
     );
     if (!user) throw new ApiError(404, "User not found");
@@ -150,15 +151,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     // send the response back to the frontend
     // check for the errors
     const inComingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    if (!inComingRefreshToken) throw new ApiError(400, "Please provide refresh token");
     try {
-        if (!inComingRefreshToken) throw new ApiError(400, "Please provide refresh token");
     
-        const decoded = jwt.verify(inComingRefreshToken, process.env.JWT_SECRET)
+        const decoded = jwt.verify(inComingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
         
         const user = await User.findById(decoded?._id)
         if (!user) throw new ApiError(404, "User not found");
-    
-        if ( inComingRefreshToken !== user.refreshToken) throw new ApiError(401, "Invalid refresh token");
+        if ( inComingRefreshToken !== user?.refreshToken) throw new ApiError(401, "Invalid refresh token");
     
         const options = {
             httpOnly: true,
@@ -170,10 +170,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
         .json(new ApiResponse(200, "Access token refreshed successfully", {accessToken, refreshToken: newRefreshToken}));
     } catch (error) {
-        throw new ApiError(401, "Invalid refresh token");
+        throw new ApiError(401, "Error in refreshing token");
     }
 });
 
@@ -224,7 +224,7 @@ const updateUserProfile = asyncHandler( async(req,res)=>{
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
 
-    const avatarLocalPath = req.file?.avatar[0]?.path?;
+    const avatarLocalPath = req.file?.path;
     if (!avatarLocalPath) throw new ApiError(400, "Please provide avatar image");
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -245,7 +245,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.file?.coverImage[0]?.path;
+    const coverImageLocalPath = req.file?.path;
     if (!coverImageLocalPath) throw new ApiError(400, "Please provide cover image");
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
@@ -311,9 +311,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 isSubscribed: 1,
                 avatar: 1,
                 coverImage: 1,
-                email: 1,
-                password: 0,
-                refreshToken: 0,
+                email: 1
             }
         }
     ])

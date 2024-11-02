@@ -7,6 +7,7 @@ const userSchema = new Schema(
             type : String,
             required : true,
             unique : true,
+            lowercase : true,
             trim : true,
             minlength : 3,
             index : true
@@ -41,6 +42,9 @@ const userSchema = new Schema(
             type : String,
             required : [true, 'Password is required'],
             minlength : 6
+        },
+        refreshToken: {
+            type: String,
         },
     },
     {

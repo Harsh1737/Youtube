@@ -35,7 +35,7 @@ router.route("/logout").post(verifyJWT,logoutUser);
 router.route("/refresh-token").post(refreshAccessToken); // verifyJWT is not required here
 router.route("/change-password").post(verifyJWT,changePassword);
 router.route("/profile").get(verifyJWT,getUserProfile);
-router.route("/udpate-profile").patch(verifyJWT,updateUserProfile);
+router.route("/update-profile").patch(verifyJWT,updateUserProfile);
 router.route("/update-avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar);
 router.route("/update-cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage);
 router.route("/channel/:username").get(getUserChannelProfile);  // username should be same bcs, we are using it in the controller
