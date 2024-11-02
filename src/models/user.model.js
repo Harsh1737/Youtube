@@ -85,7 +85,7 @@ userSchema.methods.generateAccessToken = function(){
             fullname : this.fullname,
         }, // payload
         process.env.ACCESS_TOKEN_SECRET, // secret key
-        { expiresIn : ACCESS_TOKEN_EXPIRY } // token expiry time
+        { expiresIn : process.env.ACCESS_TOKEN_EXPIRY } // token expiry time
     );
 }
 
@@ -98,8 +98,10 @@ userSchema.methods.generateRefreshToken = function(){
             _id : this._id,
         },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn : REFRESH_TOKEN_EXPIRY }
+        { expiresIn : process.env.REFRESH_TOKEN_EXPIRY }
     )
 }
 
-export const User = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+
+export { User };
