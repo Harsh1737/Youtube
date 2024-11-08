@@ -59,7 +59,6 @@ const registerUser = asyncHandler(async (req, res) => {
     }   
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-    console.table([avatar]);
     if (!avatar) {
         throw new ApiError(500, "Failed to upload images");
     }
@@ -159,7 +158,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const user = await User.findById(decoded?._id)
         if (!user) throw new ApiError(404, "User not found");
         if ( inComingRefreshToken !== user?.refreshToken) throw new ApiError(401, "Invalid refresh token");
-    
+        
         const options = {
             httpOnly: true,
             secure: true,
@@ -167,6 +166,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     
         const {accessToken, newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
     
+        user.refreshAccessToken = newRefreshToken;
+        await user.save({validateBeforeSave: true});
         return res
         .status(200)
         .cookie("accessToken", accessToken, options)
