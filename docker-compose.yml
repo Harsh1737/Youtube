@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: youtube-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/app
+    networks:
+      - youtube-network
+
+  mongo:
+    image: mongo:latest
+    container_name: youtube-mongo
+    volumes:
+      - youtube_data:/data/db
+    networks:
+      - youtube-network
+    ports:
+      - "27017:27017"
+
+# Volumes to persist data
+volumes:
+  youtube_data:
+
+networks:
+  youtube-network:
+    driver: bridge

@@ -1,1 +1,21 @@
-node_modeules
+# Ignore node_modules directory
+node_modules
+
+# Ignore Dockerfile and docker-compose.yml in case you don't want them in your container
+Dockerfile
+docker-compose.yml
+
+# Ignore any build or test directories that are not required in production
+build
+dist
+test
+
+# Ignore IDE/editor settings
+.vscode
+.idea
+
+# Ignore environment variable files
+.env
+
+# Ignore logs
+*.log
